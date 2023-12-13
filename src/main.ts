@@ -4,7 +4,8 @@ import { AsciiCastView } from './AsciiCastView';
 
 // @ts-ignore
 import asciinemaJs from "asciinema-player/dist/bundle/asciinema-player.min";
-import { Base64 } from 'js-base64';
+// @ts-ignore
+import asciinemaLoaderJs from "./asciicast-loader.txt";
 
 // Remember to rename these classes and interfaces!
 
@@ -40,6 +41,7 @@ export default class AsciiCastPlugin extends Plugin {
 		if (exportApi)
 		{
 			exportApi.addStaticJs("asciinema.min.js", asciinemaJs);
+			exportApi.addStaticJs("asciinema-loader.js", asciinemaLoaderJs);
 			exportApi.addPostProcessingStage("asciicast", (html: HTMLElement) => this.postProcess(html));
 		}
 	}
@@ -61,14 +63,13 @@ export default class AsciiCastPlugin extends Plugin {
 				return;
 			}
 
-			const castData = await cls.app.vault.read(cast);
 			castDiv.innerHTML = '';
 			castDiv.createDiv();
-			const initScript = castDiv.createEl("script");
+			/*const initScript = castDiv.createEl("script");
 			initScript.innerHTML = `
 			var castDiv = document.querySelector("div[data-castpath='${castPath}']>div");\n
-			AsciinemaPlayer.create("data:text/plain;base64,${Base64.encode(castData)}", castDiv);
-			`;
+			AsciinemaPlayer.create("/${castPath}", castDiv);
+			`;*/
 		})
 	}
 

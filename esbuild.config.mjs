@@ -16,6 +16,7 @@ const context = await esbuild.context({
 		js: banner,
 	},
 	"loader": {
+		'.txt.js': "text",
 		'.min.js': "text"
 	},
 	entryPoints: ["src/main.ts"],
