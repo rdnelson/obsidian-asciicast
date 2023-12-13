@@ -1,4 +1,4 @@
-import { App, Editor, EventRef, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, View, ViewState, Workspace, WorkspaceLeaf } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf } from 'obsidian';
 import { AsciicastPostProcessor } from './asciicast-postprocessor';
 import { AsciiCastView } from './AsciiCastView';
 
@@ -6,8 +6,6 @@ import { AsciiCastView } from './AsciiCastView';
 import asciinemaJs from "asciinema-player/dist/bundle/asciinema-player.min";
 // @ts-ignore
 import asciinemaLoaderJs from "./asciicast-loader.txt";
-
-// Remember to rename these classes and interfaces!
 
 interface AsciiCastPluginSettings {
 	mySetting: string;
