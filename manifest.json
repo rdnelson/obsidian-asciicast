@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-asciicast",
 	"name": "Asciicast",
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Adds support for embedding asciicast files.",
 	"author": "Robert Nelson",
