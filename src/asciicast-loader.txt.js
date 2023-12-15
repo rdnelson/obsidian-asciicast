@@ -9,7 +9,7 @@
         });
     };
 
-    var observer = new MutationObserver(loadPlayers);
+    const observer = new MutationObserver(loadPlayers);
 
     document.addEventListener("DOMContentLoaded", () =>
     {
