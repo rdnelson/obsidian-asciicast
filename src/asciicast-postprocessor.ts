@@ -1,136 +1,64 @@
 // @ts-ignore
 import * as AsciinemaPlayer from 'asciinema-player';
 
-import { App, MarkdownPostProcessorContext, TAbstractFile, TFile, normalizePath, EventRef } from 'obsidian';
+import { MarkdownPostProcessorContext, normalizePath } from 'obsidian';
+import { locator } from "./locator";
+
+const castPattern = /!\[cast:([^\]]+)\]/g
 
 export class AsciicastPostProcessor
 {
-    private readonly _app: App;
-    private readonly _filesByName: Map<string, string[]>;
-
-    constructor(app: App)
-    {
-        this._app = app;
-        this._filesByName = new Map<string, string[]>();
-
-        app.vault.getFiles().forEach((f) =>
-        {
-            this.addFile(f);
-        });
-    }
-
     public async process(el: HTMLElement, ctx: MarkdownPostProcessorContext)
     {
         const cls = this;
 
-        el.querySelectorAll("img").forEach((img: HTMLImageElement) =>
+        el.querySelectorAll("p").forEach((p: HTMLParagraphElement) =>
         {
-            if (!img.src.startsWith("cast:"))
+            if (!p.textContent)
             {
                 return;
             }
 
-            const castPath = normalizePath(img.src.substring(5));
-            const currentPath = ctx.sourcePath;
-            let castFile = cls._app.vault.getAbstractFileByPath(castPath);
-
-            if (!castFile)
+            for (const match of p.textContent.matchAll(castPattern) ?? [])
             {
-                const paths = cls._filesByName.get(castPath);
+                const castPath = normalizePath(match[1]);
+                const resource = locator.locateCast(ctx.sourcePath, match[1]);
 
-                if (!paths?.length)
+                if (!resource)
                 {
-                    // No file with that name
-                    return;
+                    continue;
                 }
 
-                const chosenPath = cls.getBestMatch(currentPath, castPath, paths);
-                castFile = cls._app.vault.getAbstractFileByPath(chosenPath);
+                const player = document.createElement("div");
+                player.dataset["castpath"] = castPath; 
+                AsciinemaPlayer.create(resource, player);
+
+                const len = match[0].length;
+
+                if (match.index === 0)
+                {
+                    // Starts the paragraph
+                    p.textContent = p.textContent.slice(len).trimStart();
+                    p.parentElement?.insertBefore(player, p);
+                }
+                else if (match.index !== undefined && match.index + len >= p.textContent.length)
+                {
+                    // Ends the paragraph
+                    p.textContent = p.textContent.slice(0, match.index).trimEnd();
+                    p.parentElement?.insertAfter(player, p);
+                }
+                else
+                {
+                    // Middle of the paragraph
+                    const before = document.createElement("p");
+                    before.textContent = p.textContent.slice(0, match.index);
+                    p.parentElement?.insertBefore(before, p);
+
+                    p.textContent = p.textContent.slice(match.index ?? 0 + len).trimStart();
+                    p.parentElement?.insertBefore(player, p);
+                }
             }
-
-            if (!castFile || !(castFile instanceof TFile))
-            {
-                return;
-            }
-
-            const resource = cls._app.vault.getResourcePath(castFile);
-
-            const player = document.createElement("div");
-            player.dataset["castpath"] = castFile.path; 
-            AsciinemaPlayer.create(resource, player);
-            img.replaceWith(player);
         })
     }
 
-    private getBestMatch(currentPath: string, askedPath: string, paths: string[]): string {
-        if (paths.length === 1)
-        {
-            return paths[0];
-        }
-
-        const currentSegments = currentPath.split("/");
-        if (currentSegments.length > 1)
-        {
-            for (let i = currentSegments.length - 1; i >= 0; i--)
-            {
-                const dir = currentSegments.slice(0, i).join("/");
-                const testPath = dir + "/" + askedPath;
-                if (paths.contains(testPath))
-                {
-                    return testPath;
-                }
-            }
-        }
-
-        return paths[0];
-    }
-
-    public addFile(file: TAbstractFile)
-    {
-        if (this._filesByName.has(file.name))
-        {
-            this._filesByName.get(file.name)?.push(file.path);
-        }
-        else
-        {
-            this._filesByName.set(file.name, [file.path]);
-        }
-    }
-
-	public deleteFile(file: TAbstractFile)
-    {
-        const files = this._filesByName.get(file.name);
-        if (!files)
-        {
-            return;
-        }
-
-        if (files.length === 1)
-        {
-            this._filesByName.delete(file.name);
-        }
-        else
-        {
-            files.remove(file.path);
-        }
-	}
-
-	public renameFile(file: TAbstractFile, oldPath: string)
-    {
-        const oldName = oldPath.split('/').last()!;
-        const oldFiles = this._filesByName.get(oldName);
-        if (oldFiles)
-        {
-            if (oldFiles.length > 1)
-            {
-                oldFiles.remove(oldPath);
-            }
-            else
-            {
-                this._filesByName.delete(oldName);
-            }
-        }
-
-        this.addFile(file);
-	}
 }
