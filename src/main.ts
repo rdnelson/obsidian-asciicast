@@ -1,6 +1,6 @@
 import { App, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { Extension, Prec } from '@codemirror/state';
-import { AsciicastPostProcessor } from './asciicast-postprocessor';
+import { AsciicastPostProcessor, castPattern } from './asciicast-postprocessor';
 import { AsciiCastView } from './AsciiCastView';
 
 // @ts-ignore
@@ -32,7 +32,7 @@ export default class AsciiCastPlugin extends Plugin {
 		{
 			exportApi.addStaticJs("asciinema.min.js", asciinemaJs);
 			exportApi.addStaticJs("asciinema-loader.js", asciinemaLoaderJs);
-			exportApi.addPostProcessingStage("asciicast", (html: HTMLElement) => this.postProcess(html));
+			exportApi.addPostProcessingStage("asciicast", (html: HTMLElement, view: any) => this.postProcess(html, view));
 		}
 	}
 
@@ -50,9 +50,8 @@ export default class AsciiCastPlugin extends Plugin {
 		}
 	}
 
-	async postProcess(html: HTMLElement)
+	async postProcess(html: HTMLElement, view: any)
 	{
-		const cls = this;
 		html.querySelectorAll("div[data-castpath]").forEach(async (castDiv: HTMLDivElement) =>
 		{
 			const castPath = castDiv.dataset["castpath"];
@@ -61,11 +60,13 @@ export default class AsciiCastPlugin extends Plugin {
 				return;
 			}
 
-			const cast = cls.app.vault.getAbstractFileByPath(castPath);
-			if (!cast || !(cast instanceof TFile))
+			const dir = view?.file?.parent?.path ?? "";
+			const locatedCast = locator.locateCastFile(dir, castPath);
+			if (!locatedCast)
 			{
 				return;
 			}
+			castDiv.dataset["castpath"] = locatedCast.path;
 
 			castDiv.replaceChildren();
 			castDiv.createDiv();

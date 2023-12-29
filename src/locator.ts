@@ -16,7 +16,7 @@ class CastLocator
         });
     }
 
-    locateCast(currentPath: string, castPath: string): string | null
+    locateCastFile(currentPath: string, castPath: string): TFile | null
     {
         if (this._app === null || this._filesByName === null)
         {
@@ -43,6 +43,22 @@ class CastLocator
         }
 
         if (!castFile || !(castFile instanceof TFile))
+        {
+            return null;
+        }
+
+        return castFile;
+    }
+
+    locateCast(currentPath: string, castPath: string): string | null
+    {
+        if (this._app === null)
+        {
+            return null;
+        }
+
+        const castFile = this.locateCastFile(currentPath, castPath);
+        if (!castFile)
         {
             return null;
         }

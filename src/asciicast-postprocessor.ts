@@ -4,7 +4,7 @@ import * as AsciinemaPlayer from 'asciinema-player';
 import { MarkdownPostProcessorContext, normalizePath } from 'obsidian';
 import { locator } from "./locator";
 
-const castPattern = /!\[cast:([^\]]+)\]/g
+export const castPattern = /!\[cast:([^\]]+)\]/g
 
 export class AsciicastPostProcessor
 {
@@ -54,7 +54,7 @@ export class AsciicastPostProcessor
                     before.textContent = p.textContent.slice(0, match.index);
                     p.parentElement?.insertBefore(before, p);
 
-                    p.textContent = p.textContent.slice(match.index ?? 0 + len).trimStart();
+                    p.textContent = p.textContent.slice((match.index ?? 0) + len).trimStart();
                     p.parentElement?.insertBefore(player, p);
                 }
             }
